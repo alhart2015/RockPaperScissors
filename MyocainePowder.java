@@ -27,9 +27,9 @@ public class MyocainePowder implements RoShamBot {
     private Action playerFreqLastMove;
     private Action playerHistLastMove;
     private Strategy strategy;  // The current strategy the bot is using
-    private int[] randomScore;    // For picking a strategy with a meta-strategy
-    private int[] frequencyScore;
-    private int[] historyScore;
+    private int randomScore;    // For picking a strategy with a meta-strategy
+    private int frequencyScore;
+    private int historyScore;
 
     public MyocainePowder() {
         this.rockScore = 0;
@@ -43,9 +43,9 @@ public class MyocainePowder implements RoShamBot {
         this.playerFreqLastMove = null;
         this.playerHistLastMove = null;
         this.strategy = Strategy.RANDOM;
-        this.randomScore = new int[6];  // One score for each of the 6 meta-strategies
-        this.frequencyScore = new int[6];
-        this.historyScore = new int[6];
+        this.randomScore = 0;  // One score for each of the 6 meta-strategies
+        this.frequencyScore = 0;
+        this.historyScore = 0;
     }
 
     /* Gives the next move to be played by the bot based on the combination of
