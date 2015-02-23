@@ -1,0 +1,14 @@
+Ideas for strategies:
+
+    Frequency counting - counts the previous moves of the opponent to determine
+        if the opponent prefers playing one type of move over the others. This
+        would beat all of the bots Dr. R. gave us, let's submit it to the
+        preliminary competition and see how it does. From www.dllu.net/rps
+
+    Iocane Powder (or a variation) - ...
+        From www.dllu.net/rps
+
+
+General thoughts:
+    - Do we want/need/can we have a strategy that detects when it's being
+        exploited and switches? Seems like a good idea.
