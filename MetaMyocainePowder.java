@@ -73,7 +73,20 @@ public class MetaMyocainePowder implements RoShamBot {
     private MetaStrategy pPrime0;
     private MetaStrategy pPrime1;
     private MetaStrategy pPrime2;
+    // Useful for using the P' strategies
+    private Action playerLastMove;
+    // The full history of the opponent's moves
     private List<Action> opponentHistory;
+    // The full history of your moves
+    private List<Action> playerHistory;
+    // Counts for frequency analysis
+    private double rockCount;
+    private double paperCount;
+    private double scissorsCount;
+    // Counts for predicting your own move with frequency analysis
+    private double playerRockCount;
+    private double playerPaperCount;
+    private double playerScissorsCount;
 
     public MetaMyocainePowder() {
         // Make each MetaStrategy object
@@ -83,8 +96,21 @@ public class MetaMyocainePowder implements RoShamBot {
         this.pPrime0 = new MetaStrategy();
         this.pPrime1 = new MetaStrategy();
         this.pPrime2 = new MetaStrategy();
+        // Useful for using the P' strategies
+        this.playerLastMove = Action.ROCK;
         // The full history of opponent's moves
         this.opponentHistory = new ArrayList<Action>();
+        // The full history of your moves
+        this.playerHistory = new ArrayList<Action>();
+        // Counts for frequency analysis
+        this.rockCount = 0;
+        this.paperCount = 0;
+        this.scissorsCount = 0;
+        // Counts for predicting your own move with frequency analysis
+        this.playerRockCount = 0;
+        this.playerPaperCount = 0;
+        this.playerScissorsCount = 0;
+
     }
 
     /* Return the next move to be played by the bot
@@ -114,7 +140,11 @@ public class MetaMyocainePowder implements RoShamBot {
         // Play the move of the highest scoring strategy out of all the
         // meta-strategies
 
-        return Action.ROCK;
+        // This is the move you're going to play
+        Action nextMove = Action.ROCK;
+        this.playerLastMove = nextMove;
+
+        return nextMove;
     }
 
     /////////////////////////////////////////////////////
@@ -134,11 +164,13 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private void predictP0(Action lastOpponentMove, MetaStrategy meta) {
         // Make a random move
-        meta.randMove = this.randMove();
+        meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
+        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
 
-        // Predict with hitory matching
+        // Predict with hitory analysis
+        Action histPredicted = this.historyAnalysis(lastOpponentMove);
     }
 
     /* P.1 - Defeat second-guessing
@@ -156,11 +188,13 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private void predictP1(Action lastOpponentMove, MetaStrategy meta) {
         // Make a random move
-        meta.randMove = this.randMove();
+        meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
+        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
 
-        // Predict with hitory matching
+        // Predict with hitory analysis
+        Action histPredicted = this.historyAnalysis(lastOpponentMove);
     }
 
     /* P.2 - Defeat triple-guessing
@@ -176,11 +210,13 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private void predictP2(Action lastOpponentMove, MetaStrategy meta) {
         // Make a random move
-        meta.randMove = this.randMove();
+        meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
+        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
 
-        // Predict with hitory matching
+        // Predict with hitory analysis
+        Action histPredicted = this.historyAnalysis(lastOpponentMove);
     }
 
     /* P'.0 - The opponent is using P.0 against you.
@@ -193,11 +229,13 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private void predictPPrime0(Action lastOpponentMove, MetaStrategy meta) {
         // Make a random move
-        meta.randMove = this.randMove();
+        meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
+        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
 
-        // Predict with hitory matching
+        // Predict with hitory analysis
+        Action histPredicted = this.historyAnalysis(lastOpponentMove);
     }
 
     /* P'.1 - The opponent is using P.1 against you
@@ -211,11 +249,13 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private void predictPPrime1(Action lastOpponentMove, MetaStrategy meta) {
         // Make a random move
-        meta.randMove = this.randMove();
+        meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
+        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
 
-        // Predict with hitory matching
+        // Predict with hitory analysis
+        Action histPredicted = this.historyAnalysis(lastOpponentMove);
     }
 
     /* P'.2 - The opponent is using P.2 against you
@@ -228,11 +268,13 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private void predictPPrime2(Action lastOpponentMove, MetaStrategy meta) {
         // Make a random move
-        meta.randMove = this.randMove();
+        meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
+        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
 
-        // Predict with hitory matching
+        // Predict with hitory analysis
+        Action histPredicted = this.historyAnalysis(lastOpponentMove);
     }
 
     /////////////////////////////////////////////////////
@@ -269,9 +311,131 @@ public class MetaMyocainePowder implements RoShamBot {
     // Frequency Analysis
     /////////
 
+    /* Predicts what the opponent will play next based on the most common move 
+        played by the opponent.
+
+        @param lastOpponentMove the last move played by the opponent
+
+        @return the opponent's most common move
+    */
+    private Action frequencyAnalysis(Action lastOpponentMove) {
+
+        // Decay the counts
+        this.rockCount *= DECAY_FACTOR;
+        this.paperCount *= DECAY_FACTOR;
+        this.scissorsCount *= DECAY_FACTOR;
+
+        // Update them with what just got played
+        switch (lastOpponentMove) {
+            case ROCK:
+                this.rockCount++;
+                break;
+            case PAPER:
+                this.paperCount++;
+                break;
+            case SCISSORS:
+                this.scissorsCount++;
+                break;
+        }
+
+        // Return the most frequent move
+        if (this.rockCount > this.scissorsCount) {
+            if (this.rockCount > this.paperCount) {
+                // Rock is the most frequent move
+                return Action.ROCK;
+            } else {
+                // Paper is the most frequent
+                return Action.PAPER;
+            }
+        } else if (this.scissorsCount > this.paperCount) {
+            // Scissors is the most frequent
+            return Action.SCISSORS;
+        } else {
+            // Paper is the most frequent
+            return Action.PAPER;
+        }
+    }
+
+    /* As if your opponent was using frequency analysis on you, predicts what
+        you will play next based on your most frequent moves.
+
+        @return your most common move
+    */
+    private Action selfFrequencyAnalysis() {
+
+        // Decay the counts
+        this.playerRockCount *= DECAY_FACTOR;
+        this.playerPaperCount *= DECAY_FACTOR;
+        this.playerScissorsCount *= DECAY_FACTOR;
+
+        // Update them with what you played last
+        switch (this.playerLastMove) {
+            case ROCK:
+                this.playerRockCount++;
+                break;
+            case PAPER:
+                this.playerPaperCount++;
+                break;
+            case SCISSORS:
+                this.playerScissorsCount++;
+                break;            
+        }
+
+        // Return your most frequent move
+        if (this.playerRockCount > this.playerScissorsCount) {
+            if (this.playerRockCount > this.playerPaperCount) {
+                // Rock is the most frequent move
+                return Action.ROCK;
+            } else {
+                // Paper is the most frequent
+                return Action.PAPER;
+            }
+        } else if (this.playerScissorsCount > this.playerPaperCount) {
+            // Scissors is the most frequent
+            return Action.SCISSORS;
+        } else {
+            // Paper is the most frequent
+            return Action.PAPER;
+        }        
+    }
+
     /////////
     // History Matching
     /////////
+
+    /* Predicts the opponent's next move based on the pattern of last played 
+        moves.
+
+        @param lastOpponentMove the last move played by the opponent
+
+        @return the predicted next move in the pattern
+    */
+    private Action historyAnalysis(Action lastOpponentMove) {
+        int length = 128;
+        Action predictedMove = Action.ROCK;
+        while (length > 1) {
+            if (length < this.opponentHistory.size()) {
+                boolean success = this.patternMatch(length, predictedMove);
+                if (success) {
+                    // You found the pattern, so bust out of the loop and use it
+                    length = 1;
+                } else {
+                    // Just in case you go all the way through and never find a
+                    // pattern
+                    predictedMove = this.randomMove();
+                }
+            }
+            length /= 2;
+        }
+        return predictedMove;
+    }
+
+    /* Implements history matching, looking in the past for another time the
+        opponent has played this series of moves based on our series of moves.
+    */
+    private boolean patternMatch(int length, Action predictedMove) {
+
+    }
 
     /* Helper method to determine the outcome when two players play a move.
         If playerMove beats opponentMove, returns 1. If they tie, returns
