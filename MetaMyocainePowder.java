@@ -19,21 +19,37 @@ public class MetaMyocainePowder implements RoShamBot {
 
     private static final int META_STRATEGIES = 6;
 
-    private int[] randScores;
-    private int[] freqScores;
-    private int[] histScores;
+    // Scores for each meta-strategy applied to each strategy
+    private double[] randScores;
+    private double[] freqScores;
+    private double[] histScores;
+    // The last move each strategy would have played
+    private Action[] playerLastRandMove;
+    private Action[] playerLastFreqMove;
+    private Action[] playerLastHistMove;
+    // The most effective meta-strategy
+    private int bestMetaStrategy;
 
     public MetaMyocainePowder() {
         // One score for each meta-strategy
-        randScores = new int[META_STRATEGIES];
-        freqScores = new int[META_STRATEGIES];
-        histScores = new int[META_STRATEGIES];
+        this.randScores = new double[META_STRATEGIES];
+        this.freqScores = new double[META_STRATEGIES];
+        this.histScores = new double[META_STRATEGIES];
+
+        this.playerLastRandMove = new Action[META_STRATEGIES];
+        this.playerLastFreqMove = new Action[META_STRATEGIES];
+        this.playerLastHistMove = new Action[META_STRATEGIES];
+        for (int i = 0; i < META_STRATEGIES; i++) {
+            this.playerLastRandMove[i] = Action.ROCK;
+            this.playerLastFreqMove[i] = Action.ROCK;
+            this.playerLastHistMove[i] = Action.ROCK;
+        }
     }
 
     public Action getNextMove(Action lastOpponentMove) {
 
         // Find the strategy variant with the highest score
-        int highestScore = 0;
+        double highestScore = 0;
         Strategy bestStrategy = Strategy.RANDOM;
         int bestMeta = 0;
         for (int i = 0; i < META_STRATEGIES; i++) {
@@ -55,18 +71,30 @@ public class MetaMyocainePowder implements RoShamBot {
         }
         switch (bestStrategy) {
             case RANDOM:
-                return this.playerLastRandMove;
+                return this.playerLastRandMove[bestMetaStrategy];
             case FREQUENCY:
-                return this.playerLastFreqMove;
+                return this.playerLastFreqMove[bestMetaStrategy];
             case HISTORY:
-                return this.playerLastHistMove;
+                return this.playerLastHistMove[bestMetaStrategy];
         }
         return Action.ROCK;
     }
 
-    /* Uses the chosen strategy to predict what the opponent will play.
+    /* Predicts what the opponent will play for each strategy
+
+        @param lastOpponentMove the last move played by the opponent
+        @param metaStratagy the meta-strategy you're playing
+
+        @return
     */
-    private Action predict(Action lastOpponentMove) {
+    private Action predict(Action lastOpponentMove, int metaStrategy) {
+        
+        return Action.ROCK;
+    }
+
+    /* Adjusts scores based on the last move you and your opponent played
+    */
+    private void adjustScores(Action lastOpponentMove) {
 
     }
 
@@ -79,7 +107,8 @@ public class MetaMyocainePowder implements RoShamBot {
         their next move, and beat it.
     */
     private Action p0(Action lastOpponentMove) {
-        // this.predict();
+        this.adjustScores(lastOpponentMove);
+        this.predict(lastOpponentMove);
         return Action.ROCK;
     }
 
