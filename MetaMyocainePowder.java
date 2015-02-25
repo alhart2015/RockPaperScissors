@@ -133,18 +133,97 @@ public class MetaMyocainePowder implements RoShamBot {
         this.predictP0(lastOpponentMove, p0);
         this.predictP1(lastOpponentMove, p1);
         this.predictP2(lastOpponentMove, p2);
-        this.predictPPrime0(lastOpponentMove, pPrime0);
-        this.predictPPrime1(lastOpponentMove, pPrime1);
-        this.predictPPrime2(lastOpponentMove, pPrime2);
+        this.predictPPrime0(pPrime0);
+        this.predictPPrime1(pPrime1);
+        this.predictPPrime2(pPrime2);
 
         // Play the move of the highest scoring strategy out of all the
         // meta-strategies
+        double highestScore = 0;
+        Action bestMove = Action.ROCK;
+        // Does P.0 have the best score?
+        if (this.p0.randomScore > highestScore) {
+            highestScore = this.p0.randomScore;
+            bestMove = this.p0.randMove;
+        }
+        if (this.p0.frequencyScore > highestScore) {
+            highestScore = this.p0.frequencyScore;
+            bestMove = this.p0.freqMove;
+        }
+        if (this.p0.historyScore > highestScore) {
+            highestScore = this.p0.historyScore;
+            bestMove = this.p0.histMove;
+        }
+        // What about P.1?
+        if (this.p1.randomScore > highestScore) {
+            highestScore = this.p1.randomScore;
+            bestMove = this.p1.randMove;
+        }
+        if (this.p1.frequencyScore > highestScore) {
+            highestScore = this.p1.frequencyScore;
+            bestMove = this.p1.freqMove;
+        }
+        if (this.p1.historyScore > highestScore) {
+            highestScore = this.p1.historyScore;
+            bestMove = this.p1.histMove;
+        }
+        // Or P.2?
+        if (this.p2.randomScore > highestScore) {
+            highestScore = this.p2.randomScore;
+            bestMove = this.p2.randMove;
+        }
+        if (this.p2.frequencyScore > highestScore) {
+            highestScore = this.p2.frequencyScore;
+            bestMove = this.p2.freqMove;
+        }
+        if (this.p2.historyScore > highestScore) {
+            highestScore = this.p2.historyScore;
+            bestMove = this.p2.histMove;
+        }
+        // Maybe P'.0?
+        if (this.pPrime0.randomScore > highestScore) {
+            highestScore = this.pPrime0.randomScore;
+            bestMove = this.pPrime0.randMove;
+        }
+        if (this.pPrime0.frequencyScore > highestScore) {
+            highestScore = this.pPrime0.frequencyScore;
+            bestMove = this.pPrime0.freqMove;
+        }
+        if (this.pPrime0.historyScore > highestScore) {
+            highestScore = this.pPrime0.historyScore;
+            bestMove = this.pPrime0.histMove;
+        }
+        // Or P'.1 perhaps
+        if (this.pPrime1.randomScore > highestScore) {
+            highestScore = this.pPrime1.randomScore;
+            bestMove = this.pPrime1.randMove;
+        }
+        if (this.pPrime1.frequencyScore > highestScore) {
+            highestScore = this.pPrime1.frequencyScore;
+            bestMove = this.pPrime1.freqMove;
+        }
+        if (this.pPrime1.historyScore > highestScore) {
+            highestScore = this.pPrime1.historyScore;
+            bestMove = this.pPrime1.histMove;
+        }
+        // Well what about P'.2 (finally)
+        if (this.pPrime2.randomScore > highestScore) {
+            highestScore = this.pPrime2.randomScore;
+            bestMove = this.pPrime2.randMove;
+        }
+        if (this.pPrime2.frequencyScore > highestScore) {
+            highestScore = this.pPrime2.frequencyScore;
+            bestMove = this.pPrime2.freqMove;
+        }
+        if (this.pPrime2.historyScore > highestScore) {
+            highestScore = this.pPrime2.historyScore;
+            bestMove = this.pPrime2.histMove;
+        }
 
         // This is the move you're going to play
-        Action nextMove = Action.ROCK;
-        this.playerLastMove = nextMove;
+        this.playerLastMove = bestMove;
 
-        return nextMove;
+        return bestMove;
     }
 
     /////////////////////////////////////////////////////
@@ -168,9 +247,31 @@ public class MetaMyocainePowder implements RoShamBot {
 
         // Predict with frequency analysis
         Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
+        switch (freqPredicted) {
+            case ROCK:
+                meta.freqMove = Action.PAPER;
+                break;
+            case PAPER:
+                meta.freqMove = Action.SCISSORS;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.ROCK;
+                break;
+        }
 
         // Predict with hitory analysis
         Action histPredicted = this.historyAnalysis(lastOpponentMove);
+        switch (histPredicted) {
+            case ROCK:
+                meta.histMove = Action.PAPER;
+                break;
+            case PAPER:
+                meta.histMove = Action.SCISSORS;
+                break;
+            case SCISSORS:
+                meta.histMove = Action.ROCK;
+                break;
+        }
     }
 
     /* P.1 - Defeat second-guessing
@@ -192,9 +293,31 @@ public class MetaMyocainePowder implements RoShamBot {
 
         // Predict with frequency analysis
         Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
+        switch (freqPredicted) {
+            case ROCK:
+                meta.freqMove = Action.ROCK;
+                break;
+            case PAPER:
+                meta.freqMove = Action.PAPER;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.SCISSORS;
+                break;
+        }
 
         // Predict with hitory analysis
         Action histPredicted = this.historyAnalysis(lastOpponentMove);
+        switch (histPredicted) {
+            case ROCK:
+                meta.histMove = Action.ROCK;
+                break;
+            case PAPER:
+                meta.histMove = Action.PAPER;
+                break;
+            case SCISSORS:
+                meta.histMove = Action.SCISSORS;
+                break;
+        }
     }
 
     /* P.2 - Defeat triple-guessing
@@ -214,9 +337,31 @@ public class MetaMyocainePowder implements RoShamBot {
 
         // Predict with frequency analysis
         Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
+        switch (freqPredicted) {
+            case ROCK:
+                meta.freqMove = Action.SCISSORS;
+                break;
+            case PAPER:
+                meta.freqMove = Action.ROCK;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.PAPER;
+                break;
+        }
 
         // Predict with hitory analysis
         Action histPredicted = this.historyAnalysis(lastOpponentMove);
+        switch (histPredicted) {
+            case ROCK:
+                meta.histMove = Action.SCISSORS;
+                break;
+            case PAPER:
+                meta.histMove = Action.ROCK;
+                break;
+            case SCISSORS:
+                meta.histMove = Action.PAPER;
+                break;
+        }
     }
 
     /* P'.0 - The opponent is using P.0 against you.
@@ -227,15 +372,38 @@ public class MetaMyocainePowder implements RoShamBot {
         @param lastOpponentMove the last move played by the opponent
         @param meta the MetaStrategy object you're dealing with
     */
-    private void predictPPrime0(Action lastOpponentMove, MetaStrategy meta) {
+    private void predictPPrime0(MetaStrategy meta) {
         // Make a random move
         meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
-        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
+        Action freqPredicted = this.selfFrequencyAnalysis();
+        switch (freqPredicted) {
+            case ROCK:
+                meta.freqMove = Action.SCISSORS;
+                break;
+            case PAPER:
+                meta.freqMove = Action.ROCK;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.PAPER;
+                break;
+        }
 
         // Predict with hitory analysis
-        Action histPredicted = this.historyAnalysis(lastOpponentMove);
+        Action histPredicted = this.selfHistoryAnalysis();
+        switch (histPredicted) {
+            case ROCK:
+                meta.histMove = Action.SCISSORS;
+                break;
+            case PAPER:
+                meta.histMove = Action.ROCK;
+                break;
+            case SCISSORS:
+                meta.histMove = Action.PAPER;
+                break;
+        }
+
     }
 
     /* P'.1 - The opponent is using P.1 against you
@@ -247,15 +415,38 @@ public class MetaMyocainePowder implements RoShamBot {
         @param lastOpponentMove the last move played by the opponent
         @param meta the MetaStrategy object you're dealing with
     */
-    private void predictPPrime1(Action lastOpponentMove, MetaStrategy meta) {
+    private void predictPPrime1(MetaStrategy meta) {
         // Make a random move
         meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
-        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
+        Action freqPredicted = this.selfFrequencyAnalysis();
+        switch (freqPredicted) {
+            case ROCK:
+                meta.freqMove = Action.PAPER;
+                break;
+            case PAPER:
+                meta.freqMove = Action.SCISSORS;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.ROCK;
+                break;
+        }
 
         // Predict with hitory analysis
-        Action histPredicted = this.historyAnalysis(lastOpponentMove);
+        Action histPredicted = this.selfHistoryAnalysis();
+        switch (histPredicted) {
+            case ROCK:
+                meta.freqMove = Action.PAPER;
+                break;
+            case PAPER:
+                meta.freqMove = Action.SCISSORS;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.ROCK;
+                break;
+        }
+       
     }
 
     /* P'.2 - The opponent is using P.2 against you
@@ -266,15 +457,38 @@ public class MetaMyocainePowder implements RoShamBot {
         @param lastOpponentMove the last move played by the opponent
         @param meta the MetaStrategy object you're dealing with
     */
-    private void predictPPrime2(Action lastOpponentMove, MetaStrategy meta) {
+    private void predictPPrime2(MetaStrategy meta) {
         // Make a random move
         meta.randMove = this.randomMove();
 
         // Predict with frequency analysis
-        Action freqPredicted = this.frequencyAnalysis(lastOpponentMove);
+        Action freqPredicted = this.selfFrequencyAnalysis();
+        switch (freqPredicted) {
+            case ROCK:
+                meta.freqMove = Action.ROCK;
+                break;
+            case PAPER:
+                meta.freqMove = Action.PAPER;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.SCISSORS;
+                break;
+        }
 
         // Predict with hitory analysis
-        Action histPredicted = this.historyAnalysis(lastOpponentMove);
+        Action histPredicted = this.selfHistoryAnalysis();
+        switch (histPredicted) {
+            case ROCK:
+                meta.freqMove = Action.ROCK;
+                break;
+            case PAPER:
+                meta.freqMove = Action.PAPER;
+                break;
+            case SCISSORS:
+                meta.freqMove = Action.SCISSORS;
+                break;
+        }
+    
     }
 
     /////////////////////////////////////////////////////
@@ -411,7 +625,7 @@ public class MetaMyocainePowder implements RoShamBot {
         @return the predicted next move in the pattern
     */
     private Action historyAnalysis(Action lastOpponentMove) {
-        int length = 128;
+        int length = 256;
         Action predictedMove = Action.ROCK;
         while (length > 1) {
             if (length < this.opponentHistory.size()) {
@@ -434,7 +648,101 @@ public class MetaMyocainePowder implements RoShamBot {
         opponent has played this series of moves based on our series of moves.
     */
     private boolean patternMatch(int length, Action predictedMove) {
+        List<Action> oppPattern = new ArrayList<Action>(length);
 
+        // Make a list of the last length # of moves
+        int patternPos = 0;
+        for (int i = this.opponentHistory.size() - length; i < this.opponentHistory.size(); i++) {
+            oppPattern.add(patternPos, this.opponentHistory.get(i));
+            patternPos++;
+        }
+
+        // Loop through the move history to see if your string matches any in
+        // the past
+        for (int i = 0; i < this.opponentHistory.size() - length; i++) {
+            patternPos = 0;
+            int historyPos = i;
+            Action played = this.opponentHistory.get(historyPos);
+            Action patternPlayed = oppPattern.get(patternPos);
+            // You matched the first move. Check the rest of them
+            while (played == patternPlayed) {
+                historyPos++;
+                patternPos++;
+                played = this.opponentHistory.get(historyPos);
+                patternPlayed = oppPattern.get(patternPos);
+                // If this is true, you've matched the whole string. Set
+                // predictedMove to the thing that comes next
+                if (patternPos == length - 1) {
+                    predictedMove = this.opponentHistory.get(historyPos+1);
+                    return true;
+                }
+            }
+        }
+        // You looked through the whole string and didn't find that pattern
+        return false;
+    }
+
+    /* As if your opponent does history matching on you. Predicts what you will
+        play based on your move history.
+
+        @return a prediction of what you'll play next based on your move history
+    */
+    private Action selfHistoryAnalysis() {
+        int length = 256;
+        Action predictedMove = Action.ROCK;
+        while (length > 1) {
+            if (length < this.playerHistory.size()) {
+                boolean success = this.selfPatternMatch(length, predictedMove);
+                if (success) {
+                    // You found the pattern, so bust out of the loop and use it
+                    length = 1;
+                } else {
+                    // Just in case you go all the way through and never find a
+                    // pattern
+                    predictedMove = this.randomMove();
+                }
+            }
+            length /= 2;
+        }
+        return predictedMove;        
+    }
+
+    /* Implements history matching, looking in the past for another time you
+        played this series of moves based on their series of moves.
+    */
+    private boolean selfPatternMatch(int length, Action predictedMove) {
+        List<Action> playerPattern = new ArrayList<Action>(length);
+
+        // Make a list of the last length # of moves
+        int patternPos = 0;
+        for (int i = this.playerHistory.size() - length; i < this.playerHistory.size(); i++) {
+            playerPattern.add(patternPos, this.playerHistory.get(i));
+            patternPos++;
+        }
+
+        // Loop through the move history to see if your string matches any in
+        // the past
+        for (int i = 0; i < this.playerHistory.size() - length; i++) {
+            patternPos = 0;
+            int historyPos = i;
+            Action played = this.playerHistory.get(historyPos);
+            Action patternPlayed = playerPattern.get(patternPos);
+            // You matched the first move. Check the rest of them
+            while (played == patternPlayed) {
+                historyPos++;
+                patternPos++;
+                played = this.playerHistory.get(historyPos);
+                patternPlayed = playerPattern.get(patternPos);
+                // If this is true, you've matched the whole string. Set
+                // predictedMove to the thing that comes next
+                if (patternPos == length - 1) {
+                    predictedMove = this.playerHistory.get(historyPos+1);
+                    return true;
+                }
+            }
+        }
+        // You looked through the whole string and didn't find that pattern
+        return false;
     }
 
     /* Helper method to determine the outcome when two players play a move.
