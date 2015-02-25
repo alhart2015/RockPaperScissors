@@ -1,13 +1,8 @@
 /*
-    BASE CODE THAT THE OTHER MYOCAINES ARE BUILT OFF OF. IT MORE OR LESS WORKS,
-    SO I DON'T WANT TO SCREW WITH IT TOO MUCH, BUT I DO WANT TO EXPAND ON IT.
-    FOR FULL-FLEDGED MYOCAINE POWDER WITH ALL THE META-META-STRATEGIES, CHECK
-    OUT MetaMyocainePowder.java
-
     Based on the strategies employed in the Iocaine Powder bot described by
     Dan Egnor at http://ofb.net/~egnor/iocaine.html. Uses three prediction
-    strategies, a meta-strategy to pick which prediction strategy to use, and
-    a meta-meta strategy to pick which meta-strategy to use.
+    strategies, and a simple meta-strategy to pick which of those is most
+    likely to win. Does not employ any meta-meta-strategy.
 
     @author Alden Hart
     2/21/2015
@@ -15,7 +10,7 @@
 import java.util.List;
 import java.util.ArrayList;
 
-public class MyocainePowder implements RoShamBot {
+public class MyocainePowderSimple implements RoShamBot {
 
     private enum Strategy {
         RANDOM, FREQUENCY, HISTORY
@@ -27,37 +22,28 @@ public class MyocainePowder implements RoShamBot {
     private Action mostFrequent;
     private Action winner;
     private List<Action> oppLastMoves;    // Used for history matching
-    // private List<Action> playerLastMoves;
     private Action playerRandLastMove;
     private Action playerFreqLastMove;
     private Action playerHistLastMove;
     private Strategy strategy;  // The current strategy the bot is using
-    // For picking a strategy with a meta-strategy. For each array:
-    //      a[0] = score with P.0
-    //      a[1] = score with P.1
-    //      a[2] = score with P.2
-    //      a[3] = score with P'.0
-    //      a[4] = score with P'.1
-    //      a[5] = score with P'.2
-    private int[] randomScore;    // For picking a strategy with a meta-strategy
-    private int[] frequencyScore;
-    private int[] historyScore;
+    private int randomScore;    // For picking a strategy with a meta-strategy
+    private int frequencyScore;
+    private int historyScore;
 
-    public MyocainePowder() {
+    public MyocainePowderSimple() {
         this.rockScore = 0;
         this.paperScore = 0;
         this.scissorsScore = 0;
         this.mostFrequent = Action.ROCK;
         this.winner = Action.PAPER;
         this.oppLastMoves = new ArrayList<Action>(5);
-        // this.playerLastMoves = new ArrayList<Action>(5);
         this.playerRandLastMove = null;
         this.playerFreqLastMove = null;
         this.playerHistLastMove = null;
         this.strategy = Strategy.RANDOM;
-        this.randomScore = new int[6];  // One score for each of the 6 meta-strategies
-        this.frequencyScore = new int[6];
-        this.historyScore = new int[6];
+        this.randomScore = 0; 
+        this.frequencyScore = 0;
+        this.historyScore = 0;
     }
 
     /* Gives the next move to be played by the bot based on the combination of
@@ -71,39 +57,16 @@ public class MyocainePowder implements RoShamBot {
     public Action getNextMove(Action lastOpponentMove) {
         this.oppLastMoves.add(lastOpponentMove);
         this.strategy = this.metaStrategy(lastOpponentMove);
-        // Action nextMove;
-        // // System.out.println("Move played");
-        // switch (this.strategy) {
-        //     case RANDOM:
-        //         nextMove = this.randomMove();
-        //         break;
-        //     case FREQUENCY:
-        //         nextMove = this.frequencyAnalysis(lastOpponentMove);
-        //         break;
-        //     case HISTORY:
-        //         nextMove = this.historyAnalysis(lastOpponentMove);
-        //         break;
-        //     default:    // This should never happen
-        //         System.out.println("PROBLEM");
-        //         nextMove = Action.ROCK;
-        //         break;
-        // }
-        // this.playerLastMove = nextMove;
 
-        // return nextMove;
         switch (this.strategy) {
             case RANDOM:
-                // System.out.println("Random");
                 return this.playerRandLastMove;
             case FREQUENCY:
-                // System.out.println("Frequency");
                 return this.playerFreqLastMove;
             case HISTORY:
-                // System.out.println("History");
                 return this.playerHistLastMove;
         }
         // This should never happen
-        // System.out.println("This happened");
         return Action.ROCK;
     }
 
@@ -115,35 +78,11 @@ public class MyocainePowder implements RoShamBot {
     */
     private Strategy metaStrategy(Action lastOpponentMove) {
 
-        /* P.0 - Naive
-            Assume the opponent is vulnerable to prediction by P. Predict
-            their next move, and beat it.
-        */
-
-        /* P.1 - Defeat second-guessing
-            Assume the opponent thinks you will use P.0. If P predicts rock,
-            P.0 would play paper, but your opponent predicts that, so they
-            play scissors. Then you play rock to beat their scissors.
-        */
-
-        /* P.2 - Defeat triple-guessing
-            Assume the opponent thinks you will use P.1, so beat it.
-        */
-
-        /* P'.0 - The opponent is using P.0 against you
-        */
-
-        /* P'.1 - The opponent is using P.1 against you
-        */
-
-        /* P'.2 - The opponent is using P.2 against you
-        */
-
         // Based on the last move you played and the last move he played,
         // adjust the scores
-        this.randomScore[0] += beats(playerRandLastMove, lastOpponentMove);
-        this.frequencyScore[0] += beats(playerFreqLastMove, lastOpponentMove);
-        this.historyScore[0] += beats(playerHistLastMove, lastOpponentMove);
+        this.randomScore += beats(playerRandLastMove, lastOpponentMove);
+        this.frequencyScore += beats(playerFreqLastMove, lastOpponentMove);
+        this.historyScore += beats(playerHistLastMove, lastOpponentMove);
 
         // Update the last move you would have played for each strategy
         this.playerRandLastMove = this.randomMove();
@@ -151,17 +90,15 @@ public class MyocainePowder implements RoShamBot {
         this.playerHistLastMove = this.historyAnalysis(lastOpponentMove);
 
         // Return the strategy with the best score
-        if (this.randomScore[0] > this.frequencyScore[0]) {
-            if (this.randomScore[0] > this.historyScore[0]) {
+        if (this.randomScore > this.frequencyScore) {
+            if (this.randomScore > this.historyScore) {
                 return Strategy.RANDOM;
             }
-        } else if (this.frequencyScore[0] > this.historyScore[0]) {
+        } else if (this.frequencyScore > this.historyScore) {
             return Strategy.FREQUENCY;
         } else {
             return Strategy.HISTORY;
         }
-
-        // return Strategy.HISTORY;
 
         // This should never happen
         return Strategy.HISTORY;
@@ -262,9 +199,7 @@ public class MyocainePowder implements RoShamBot {
     private Action historyAnalysis(Action lastOpponentMove) {
         int length = 128;
         while (length > 1) {
-            // System.out.println("length: " + length);
             if (length < this.oppLastMoves.size()) {
-                // System.out.println("Pattern matching. Length: " + length);
                 boolean success = this.patternMatch(length);
                 if (success) {
                     // You found the pattern, so bust out of the loop and use it
@@ -277,8 +212,6 @@ public class MyocainePowder implements RoShamBot {
             }
             length /= 2;
         }
-        // this.oppLastMoves.add(lastOpponentMove);
-        // this.playerLastMoves.add(this.winner);
         return this.winner;
     }
 
@@ -288,19 +221,13 @@ public class MyocainePowder implements RoShamBot {
     private boolean patternMatch(int length) {
 
         List<Action> oppPattern = new ArrayList<Action>(length);
-        // int start = 0;
         
         // Make a list of the last length# of moves
         int patternPos = 0;
         for (int i = this.oppLastMoves.size() - length; i < this.oppLastMoves.size(); i++) {
-            // System.out.println("History size: " + this.oppLastMoves.size());
-            // System.out.println("Length: " + length + " " + oppPattern.size());
-            // System.out.println("Pattern pos: " + patternPos);
-            // System.out.println();
             oppPattern.add(patternPos, this.oppLastMoves.get(i));
             patternPos++;
         }
-        //System.out.println("length: " + length + " pattern made");
 
         // Loop through the move history to see if your string matches any
         // in the past
@@ -371,27 +298,6 @@ public class MyocainePowder implements RoShamBot {
             } else {
                 return 0;
             }
-        }
-    }
-
-    /* Helper method to return the next move in the cycle (rock, paper, scossors)
-        Eg. next(rock) = paper, next(paper) = scissors. The move returned by
-        this function beats the argument passed to it
-
-        @param move the move to be cycled
-
-        @return the next move in the cycle
-    */
-    private static Action next(Action move) {
-        switch (move) {
-            case ROCK:
-                return Action.PAPER;
-            case PAPER:
-                return Action.SCISSORS;
-            case SCISSORS:
-                return Action.ROCK;
-            default:    // This should never happen
-                return Action.ROCK;
         }
     }
 
