@@ -301,16 +301,23 @@ public class MyocainePowder implements RoShamBot {
             patternPos++;
         }
         //System.out.println("length: " + length + " pattern made");
+        int rCount = 0;
+        int pCount = 0;
+        int sCount = 0;
+        boolean foundPattern = false;
 
         // Loop through the move history to see if your string matches any
         // in the past
+
+
         for (int i = 0; i < this.oppLastMoves.size() - length; i++) {
             patternPos = 0;
             int historyPos = i;
             Action played = this.oppLastMoves.get(historyPos);
             Action patternPlayed = oppPattern.get(patternPos);
+            boolean findNext = false;
             // You matched the first move. Check the rest of them
-            while (played == patternPlayed) {
+            while (played == patternPlayed && !findNext) {
                 historyPos++;
                 patternPos++;
                 played = this.oppLastMoves.get(historyPos);
@@ -321,16 +328,37 @@ public class MyocainePowder implements RoShamBot {
                     Action nextMove = this.oppLastMoves.get(historyPos+1);
                     switch (nextMove) {
                         case ROCK:
-                            this.winner = Action.PAPER;
-                            return true;
+                            rCount++;
+                            foundPattern = true;
+                            findNext = true;
+                            break;
                         case PAPER:
-                            this.winner = Action.SCISSORS;
-                            return true;
+                            pCount++;
+                            foundPattern = true;
+                            findNext = true;
+                            break;
                         case SCISSORS:
-                            this.winner = Action.ROCK;
-                            return true;
+                            sCount++;
+                            foundPattern = true;
+                            findNext = true;
+                            break;
                     }
                 }
+            }
+        }
+
+        if (foundPattern) {
+            if (rCount > pCount && rCount > sCount) {
+                this.winner = Action.PAPER;
+                return true;
+            }
+            else if (pCount > rCount && pCount > sCount) {
+                this.winner = Action.SCISSORS;
+                return true;
+            }
+            else {
+                this.winner = Action.ROCK;
+                return true;
             }
         }
         // You looked through the whole string and didn't find that pattern
