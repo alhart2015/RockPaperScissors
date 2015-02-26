@@ -664,22 +664,22 @@ public class MetaMyocainePowder implements RoShamBot {
         
         // Loop through the move history to see if your string matches any in
         // the past
-        for (int i = 0; i < this.oppLastMoves.size() - length; i++) {
+        for (int i = 0; i < this.opponentHistory.size() - length; i++) {
             patternPos = 0;
             int historyPos = i;
-            Action played = this.oppLastMoves.get(historyPos);
+            Action played = this.opponentHistory.get(historyPos);
             Action patternPlayed = oppPattern.get(patternPos);
             boolean findNext = false;
             // You matched the first move. Check the rest of them
             while (played == patternPlayed && !findNext) {
                 historyPos++;
                 patternPos++;
-                played = this.oppLastMoves.get(historyPos);
+                played = this.opponentHistory.get(historyPos);
                 patternPlayed = oppPattern.get(patternPos);
                 // You matched the whole string. Set winner to the thing that
                 // beats the next move played in the history
                 if (patternPos == length - 1) {
-                    Action nextMove = this.oppLastMoves.get(historyPos+1);
+                    Action nextMove = this.opponentHistory.get(historyPos+1);
                     switch (nextMove) {
                         case ROCK:
                             rCount++;
@@ -703,15 +703,15 @@ public class MetaMyocainePowder implements RoShamBot {
 
         if (foundPattern) {
             if (rCount > pCount && rCount > sCount) {
-                this.winner = Action.PAPER;
+                predictedMove = Action.PAPER;
                 return true;
             }
             else if (pCount > rCount && pCount > sCount) {
-                this.winner = Action.SCISSORS;
+                predictedMove = Action.SCISSORS;
                 return true;
             }
             else {
-                this.winner = Action.ROCK;
+                predictedMove = Action.ROCK;
                 return true;
             }
         }
@@ -757,6 +757,11 @@ public class MetaMyocainePowder implements RoShamBot {
             patternPos++;
         }
 
+        int rCount = 0;
+        int pCount = 0;
+        int sCount = 0;
+        boolean foundPattern = false;
+
         // Loop through the move history to see if your string matches any in
         // the past
         for (int i = 0; i < this.playerHistory.size() - length; i++) {
@@ -764,18 +769,50 @@ public class MetaMyocainePowder implements RoShamBot {
             int historyPos = i;
             Action played = this.playerHistory.get(historyPos);
             Action patternPlayed = playerPattern.get(patternPos);
+            boolean findNext = false;
             // You matched the first move. Check the rest of them
-            while (played == patternPlayed) {
+            while (played == patternPlayed && !findNext) {
                 historyPos++;
                 patternPos++;
                 played = this.playerHistory.get(historyPos);
                 patternPlayed = playerPattern.get(patternPos);
-                // If this is true, you've matched the whole string. Set
-                // predictedMove to the thing that comes next
+                // You matched the whole string. Set winner to the thing that
+                // beats the next move played in the history
                 if (patternPos == length - 1) {
-                    predictedMove = this.playerHistory.get(historyPos+1);
-                    return true;
+                    Action nextMove = this.playerHistory.get(historyPos+1);
+                    switch (nextMove) {
+                        case ROCK:
+                            rCount++;
+                            foundPattern = true;
+                            findNext = true;
+                            break;
+                        case PAPER:
+                            pCount++;
+                            foundPattern = true;
+                            findNext = true;
+                            break;
+                        case SCISSORS:
+                            sCount++;
+                            foundPattern = true;
+                            findNext = true;
+                            break;
+                    }
                 }
+            }
+        }
+
+        if (foundPattern) {
+            if (rCount > pCount && rCount > sCount) {
+                predictedMove = Action.PAPER;
+                return true;
+            }
+            else if (pCount > rCount && pCount > sCount) {
+                predictedMove = Action.SCISSORS;
+                return true;
+            }
+            else {
+                predictedMove = Action.ROCK;
+                return true;
             }
         }
         // You looked through the whole string and didn't find that pattern
