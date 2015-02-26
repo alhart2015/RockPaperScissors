@@ -3,25 +3,26 @@ import subprocess
 from time import sleep
 
 def main():
-	num_tournys = 50
 	
 	bot1 = raw_input("Please enter the name of the first bot: ")
 	bot2 = raw_input("Please enter the name of the second bot: ")
+	num_tournys = input("Please enter the number of tournaments to play: ")
 	# bot1 = "MyocainePowder"
 	# bot2 = "NashBot"
 	cmd = "java Tournament " + bot1 + " " + bot2 + " 10000"
 
 	outfile = open("tourny_results.txt", "w")
-	print "Starting Tournament"
+	print "Beginning", num_tournys, "tournaments between", bot1, "and", bot2
 	for i in xrange(num_tournys):
 		wait_process = subprocess.Popen(cmd, stdout=outfile, shell=True)
 
 		while wait_process.poll() is None:
 			sleep(1)
+		print "Completed tournament", i+1
 
 
 	outfile.close()
-
+	print
 	infile = open("tourny_results.txt", "r")
 
 	bot_one_wins = []
@@ -53,7 +54,10 @@ def avg(lst):
 	total = 0
 	for x in lst:
 		total += int(x)
-	return total/float(len(lst))
+	if len(lst) != 0:
+		return total/float(len(lst))
+	else:
+		return len(lst)
 
 
 
