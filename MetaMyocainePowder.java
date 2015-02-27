@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class MetaMyocainePowder implements RoShamBot {
 
     private static final int META_STRATEGIES = 6;
-    private static final double DECAY_FACTOR = 0.9;
+    private static final double DECAY_FACTOR = 0.8;
 
     private enum Strategy {
         RANDOM, FREQUENCY, HISTORY
@@ -128,6 +128,42 @@ public class MetaMyocainePowder implements RoShamBot {
         this.pPrime0.updateScores(lastOpponentMove);
         this.pPrime1.updateScores(lastOpponentMove);
         this.pPrime2.updateScores(lastOpponentMove);
+
+        // Decay the counts
+        this.rockCount *= DECAY_FACTOR;
+        this.paperCount *= DECAY_FACTOR;
+        this.scissorsCount *= DECAY_FACTOR;
+
+        // Update them with what just got played
+        switch (lastOpponentMove) {
+            case ROCK:
+                this.rockCount++;
+                break;
+            case PAPER:
+                this.paperCount++;
+                break;
+            case SCISSORS:
+                this.scissorsCount++;
+                break;
+        }
+
+        // Decay the counts
+        this.playerRockCount *= DECAY_FACTOR;
+        this.playerPaperCount *= DECAY_FACTOR;
+        this.playerScissorsCount *= DECAY_FACTOR;
+
+        // Update them with what you played last
+        switch (this.playerLastMove) {
+            case ROCK:
+                this.playerRockCount++;
+                break;
+            case PAPER:
+                this.playerPaperCount++;
+                break;
+            case SCISSORS:
+                this.playerScissorsCount++;
+                break;            
+        }
 
         // For each strategy within each meta-strategy, predict a new move
         this.predictP0(lastOpponentMove, p0);
@@ -437,13 +473,13 @@ public class MetaMyocainePowder implements RoShamBot {
         Action histPredicted = this.selfHistoryAnalysis();
         switch (histPredicted) {
             case ROCK:
-                meta.freqMove = Action.PAPER;
+                meta.histMove = Action.PAPER;
                 break;
             case PAPER:
-                meta.freqMove = Action.SCISSORS;
+                meta.histMove = Action.SCISSORS;
                 break;
             case SCISSORS:
-                meta.freqMove = Action.ROCK;
+                meta.histMove = Action.ROCK;
                 break;
         }
        
@@ -479,13 +515,13 @@ public class MetaMyocainePowder implements RoShamBot {
         Action histPredicted = this.selfHistoryAnalysis();
         switch (histPredicted) {
             case ROCK:
-                meta.freqMove = Action.ROCK;
+                meta.histMove = Action.ROCK;
                 break;
             case PAPER:
-                meta.freqMove = Action.PAPER;
+                meta.histMove = Action.PAPER;
                 break;
             case SCISSORS:
-                meta.freqMove = Action.SCISSORS;
+                meta.histMove = Action.SCISSORS;
                 break;
         }
     
@@ -534,24 +570,6 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private Action frequencyAnalysis(Action lastOpponentMove) {
 
-        // Decay the counts
-        this.rockCount *= DECAY_FACTOR;
-        this.paperCount *= DECAY_FACTOR;
-        this.scissorsCount *= DECAY_FACTOR;
-
-        // Update them with what just got played
-        switch (lastOpponentMove) {
-            case ROCK:
-                this.rockCount++;
-                break;
-            case PAPER:
-                this.paperCount++;
-                break;
-            case SCISSORS:
-                this.scissorsCount++;
-                break;
-        }
-
         // Return the most frequent move
         if (this.rockCount > this.scissorsCount) {
             if (this.rockCount > this.paperCount) {
@@ -576,24 +594,6 @@ public class MetaMyocainePowder implements RoShamBot {
         @return your most common move
     */
     private Action selfFrequencyAnalysis() {
-
-        // Decay the counts
-        this.playerRockCount *= DECAY_FACTOR;
-        this.playerPaperCount *= DECAY_FACTOR;
-        this.playerScissorsCount *= DECAY_FACTOR;
-
-        // Update them with what you played last
-        switch (this.playerLastMove) {
-            case ROCK:
-                this.playerRockCount++;
-                break;
-            case PAPER:
-                this.playerPaperCount++;
-                break;
-            case SCISSORS:
-                this.playerScissorsCount++;
-                break;            
-        }
 
         // Return your most frequent move
         if (this.playerRockCount > this.playerScissorsCount) {
@@ -703,15 +703,15 @@ public class MetaMyocainePowder implements RoShamBot {
 
         if (foundPattern) {
             if (rCount > pCount && rCount > sCount) {
-                predictedMove = Action.PAPER;
+                predictedMove = Action.ROCK;
                 return true;
             }
             else if (pCount > rCount && pCount > sCount) {
-                predictedMove = Action.SCISSORS;
+                predictedMove = Action.PAPER;
                 return true;
             }
             else {
-                predictedMove = Action.ROCK;
+                predictedMove = Action.SCISSORS;
                 return true;
             }
         }
@@ -803,15 +803,15 @@ public class MetaMyocainePowder implements RoShamBot {
 
         if (foundPattern) {
             if (rCount > pCount && rCount > sCount) {
-                predictedMove = Action.PAPER;
+                predictedMove = Action.ROCK;
                 return true;
             }
             else if (pCount > rCount && pCount > sCount) {
-                predictedMove = Action.SCISSORS;
+                predictedMove = Action.PAPER;
                 return true;
             }
             else {
-                predictedMove = Action.ROCK;
+                predictedMove = Action.SCISSORS;
                 return true;
             }
         }
