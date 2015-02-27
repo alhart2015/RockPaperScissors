@@ -17,7 +17,7 @@ import java.util.ArrayList;
 public class MetaMyocainePowder implements RoShamBot {
 
     private static final int META_STRATEGIES = 6;
-    private static final double DECAY_FACTOR = 0.8;
+    private static final double DECAY_FACTOR = 0.9;
 
     private enum Strategy {
         RANDOM, FREQUENCY, HISTORY
@@ -87,6 +87,8 @@ public class MetaMyocainePowder implements RoShamBot {
     private double playerRockCount;
     private double playerPaperCount;
     private double playerScissorsCount;
+    // The move that history analysis predicts you'll play
+    private Action historyPredicted;
 
     public MetaMyocainePowder() {
         // Make each MetaStrategy object
@@ -110,6 +112,8 @@ public class MetaMyocainePowder implements RoShamBot {
         this.playerRockCount = 0;
         this.playerPaperCount = 0;
         this.playerScissorsCount = 0;
+        // The move that history analysis predicts you'll play
+        this.historyPredicted = Action.PAPER;
 
     }
 
@@ -120,6 +124,9 @@ public class MetaMyocainePowder implements RoShamBot {
         @return the next move your bot will play
     */
     public Action getNextMove(Action lastOpponentMove) {
+
+        this.opponentHistory.add(lastOpponentMove);
+        this.playerHistory.add(this.playerLastMove);
     
         // Update meta-strategy scores
         this.p0.updateScores(lastOpponentMove);
@@ -626,52 +633,53 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private Action historyAnalysis(Action lastOpponentMove) {
         int length = 256;
-        Action predictedMove = Action.ROCK;
+        // Action predictedMove = Action.ROCK;
         while (length > 1) {
+            // System.out.println(length + " " + this.opponentHistory.size());
+            // System.out.println("pattern matching");
             if (length < this.opponentHistory.size()) {
-                boolean success = this.patternMatch(length, predictedMove);
+                // System.out.println("pattern matching");
+                boolean success = this.patternMatch(length);
+                
                 if (success) {
                     // You found the pattern, so bust out of the loop and use it
+                    // System.out.println("found");
                     length = 1;
                 } else {
                     // Just in case you go all the way through and never find a
                     // pattern
-                    predictedMove = this.randomMove();
+                    // predictedMove = this.randomMove();
+                    this.historyPredicted = this.randomMove();
                 }
             }
             length /= 2;
         }
-        return predictedMove;
+        return this.historyPredicted;
     }
 
     /* Implements history matching, looking in the past for another time the
         opponent has played this series of moves based on our series of moves.
     */
-    private boolean patternMatch(int length, Action predictedMove) {
-        List<Action> oppPattern = new ArrayList<Action>(length);
+    private boolean patternMatch(int length) {
 
-        // Make a list of the last length # of moves
+        List<Action> oppPattern = new ArrayList<Action>();
+        
+        // Make a list of the last length# of moves
         int patternPos = 0;
         for (int i = this.opponentHistory.size() - length; i < this.opponentHistory.size(); i++) {
             oppPattern.add(patternPos, this.opponentHistory.get(i));
             patternPos++;
         }
 
-        int rCount = 0;
-        int pCount = 0;
-        int sCount = 0;
-        boolean foundPattern = false;
-        
-        // Loop through the move history to see if your string matches any in
-        // the past
+        // Loop through the move history to see if your string matches any
+        // in the past
         for (int i = 0; i < this.opponentHistory.size() - length; i++) {
             patternPos = 0;
             int historyPos = i;
             Action played = this.opponentHistory.get(historyPos);
             Action patternPlayed = oppPattern.get(patternPos);
-            boolean findNext = false;
             // You matched the first move. Check the rest of them
-            while (played == patternPlayed && !findNext) {
+            while (played == patternPlayed) {
                 historyPos++;
                 patternPos++;
                 played = this.opponentHistory.get(historyPos);
@@ -682,42 +690,96 @@ public class MetaMyocainePowder implements RoShamBot {
                     Action nextMove = this.opponentHistory.get(historyPos+1);
                     switch (nextMove) {
                         case ROCK:
-                            rCount++;
-                            foundPattern = true;
-                            findNext = true;
-                            break;
+                            this.historyPredicted = Action.ROCK;
+                            // System.out.println("predicting op rock");
+                            return true;
                         case PAPER:
-                            pCount++;
-                            foundPattern = true;
-                            findNext = true;
-                            break;
+                            this.historyPredicted = Action.PAPER;
+                            // System.out.println("predicting op paper");
+                            return true;
                         case SCISSORS:
-                            sCount++;
-                            foundPattern = true;
-                            findNext = true;
-                            break;
+                            this.historyPredicted = Action.SCISSORS;
+                            // System.out.println("predicting op scissors");
+                            return true;
                     }
                 }
             }
         }
-
-        if (foundPattern) {
-            if (rCount > pCount && rCount > sCount) {
-                predictedMove = Action.ROCK;
-                return true;
-            }
-            else if (pCount > rCount && pCount > sCount) {
-                predictedMove = Action.PAPER;
-                return true;
-            }
-            else {
-                predictedMove = Action.SCISSORS;
-                return true;
-            }
-        }
+        // System.out.println("failed");
         // You looked through the whole string and didn't find that pattern
         return false;
     }
+    // private boolean patternMatch(int length) {
+    //     List<Action> oppPattern = new ArrayList<Action>();
+
+    //     // Make a list of the last length # of moves
+    //     int patternPos = 0;
+    //     for (int i = this.opponentHistory.size() - length; i < this.opponentHistory.size(); i++) {
+    //         oppPattern.add(patternPos, this.opponentHistory.get(i));
+    //         patternPos++;
+    //     }
+
+    //     int rCount = 0;
+    //     int pCount = 0;
+    //     int sCount = 0;
+    //     boolean foundPattern = false;
+        
+    //     // Loop through the move history to see if your string matches any in
+    //     // the past
+    //     for (int i = 0; i < this.opponentHistory.size() - length; i++) {
+    //         patternPos = 0;
+    //         int historyPos = i;
+    //         Action played = this.opponentHistory.get(historyPos);
+    //         Action patternPlayed = oppPattern.get(patternPos);
+    //         boolean findNext = false;
+    //         // You matched the first move. Check the rest of them
+    //         while (played == patternPlayed && !findNext) {
+    //             historyPos++;
+    //             patternPos++;
+    //             played = this.opponentHistory.get(historyPos);
+    //             patternPlayed = oppPattern.get(patternPos);
+    //             // You matched the whole string. Set winner to the thing that
+    //             // beats the next move played in the history
+    //             if (patternPos == length - 1) {
+    //                 Action nextMove = this.opponentHistory.get(historyPos+1);
+    //                 switch (nextMove) {
+    //                     case ROCK:
+    //                         rCount++;
+    //                         foundPattern = true;
+    //                         findNext = true;
+    //                         break;
+    //                     case PAPER:
+    //                         pCount++;
+    //                         foundPattern = true;
+    //                         findNext = true;
+    //                         break;
+    //                     case SCISSORS:
+    //                         sCount++;
+    //                         foundPattern = true;
+    //                         findNext = true;
+    //                         break;
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     if (foundPattern) {
+    //         if (rCount > pCount && rCount > sCount) {
+    //             this.historyPredicted = Action.ROCK;
+    //             return true;
+    //         }
+    //         else if (pCount > rCount && pCount > sCount) {
+    //             this.historyPredicted = Action.PAPER;
+    //             return true;
+    //         }
+    //         else {
+    //             this.historyPredicted = Action.SCISSORS;
+    //             return true;
+    //         }
+    //     }
+    //     // You looked through the whole string and didn't find that pattern
+    //     return false;
+    // }
 
     /* As if your opponent does history matching on you. Predicts what you will
         play based on your move history.
@@ -726,52 +788,59 @@ public class MetaMyocainePowder implements RoShamBot {
     */
     private Action selfHistoryAnalysis() {
         int length = 256;
-        Action predictedMove = Action.ROCK;
+        // Action predictedMove = Action.ROCK;
         while (length > 1) {
             if (length < this.playerHistory.size()) {
-                boolean success = this.selfPatternMatch(length, predictedMove);
+                boolean success = this.selfPatternMatch(length);
                 if (success) {
                     // You found the pattern, so bust out of the loop and use it
                     length = 1;
                 } else {
                     // Just in case you go all the way through and never find a
                     // pattern
-                    predictedMove = this.randomMove();
+                    this.historyPredicted = this.randomMove();
                 }
             }
             length /= 2;
         }
-        return predictedMove;        
+
+        // switch (this.historyPredicted) {
+        //     case ROCK:
+        //         System.out.println("Rock");
+        //         break;
+        //     case PAPER:
+        //         System.out.println("paper");
+        //         break;
+        //     case SCISSORS:
+        //         System.out.println("scissors");
+        //         break;
+        // }
+        return this.historyPredicted;        
     }
 
     /* Implements history matching, looking in the past for another time you
         played this series of moves based on their series of moves.
     */
-    private boolean selfPatternMatch(int length, Action predictedMove) {
-        List<Action> playerPattern = new ArrayList<Action>(length);
+    private boolean selfPatternMatch(int length) {
 
-        // Make a list of the last length # of moves
+        List<Action> playerPattern = new ArrayList<Action>();
+        
+        // Make a list of the last length# of moves
         int patternPos = 0;
         for (int i = this.playerHistory.size() - length; i < this.playerHistory.size(); i++) {
             playerPattern.add(patternPos, this.playerHistory.get(i));
             patternPos++;
         }
 
-        int rCount = 0;
-        int pCount = 0;
-        int sCount = 0;
-        boolean foundPattern = false;
-
-        // Loop through the move history to see if your string matches any in
-        // the past
+        // Loop through the move history to see if your string matches any
+        // in the past
         for (int i = 0; i < this.playerHistory.size() - length; i++) {
             patternPos = 0;
             int historyPos = i;
             Action played = this.playerHistory.get(historyPos);
             Action patternPlayed = playerPattern.get(patternPos);
-            boolean findNext = false;
             // You matched the first move. Check the rest of them
-            while (played == patternPlayed && !findNext) {
+            while (played == patternPlayed) {
                 historyPos++;
                 patternPos++;
                 played = this.playerHistory.get(historyPos);
@@ -782,42 +851,98 @@ public class MetaMyocainePowder implements RoShamBot {
                     Action nextMove = this.playerHistory.get(historyPos+1);
                     switch (nextMove) {
                         case ROCK:
-                            rCount++;
-                            foundPattern = true;
-                            findNext = true;
-                            break;
+                            this.historyPredicted = Action.ROCK;
+                            // System.out.println("predicting rock");
+                            return true;
                         case PAPER:
-                            pCount++;
-                            foundPattern = true;
-                            findNext = true;
-                            break;
+                            this.historyPredicted = Action.PAPER;
+                            // System.out.println("predicting paper");
+                            return true;
                         case SCISSORS:
-                            sCount++;
-                            foundPattern = true;
-                            findNext = true;
-                            break;
+                            this.historyPredicted = Action.SCISSORS;
+                            // System.out.println("predicting scissors");
+                            return true;
                     }
                 }
-            }
-        }
-
-        if (foundPattern) {
-            if (rCount > pCount && rCount > sCount) {
-                predictedMove = Action.ROCK;
-                return true;
-            }
-            else if (pCount > rCount && pCount > sCount) {
-                predictedMove = Action.PAPER;
-                return true;
-            }
-            else {
-                predictedMove = Action.SCISSORS;
-                return true;
             }
         }
         // You looked through the whole string and didn't find that pattern
         return false;
     }
+    // private boolean selfPatternMatch(int length) {
+    //     List<Action> playerPattern = new ArrayList<Action>();
+
+    //     // Make a list of the last length # of moves
+    //     int patternPos = 0;
+    //     for (int i = this.playerHistory.size() - length; i < this.playerHistory.size(); i++) {
+    //         playerPattern.add(patternPos, this.playerHistory.get(i));
+    //         patternPos++;
+    //     }
+
+    //     int rCount = 0;
+    //     int pCount = 0;
+    //     int sCount = 0;
+    //     boolean foundPattern = false;
+
+    //     // Loop through the move history to see if your string matches any in
+    //     // the past
+    //     for (int i = 0; i < this.playerHistory.size() - length; i++) {
+    //         patternPos = 0;
+    //         int historyPos = i;
+    //         Action played = this.playerHistory.get(historyPos);
+    //         Action patternPlayed = playerPattern.get(patternPos);
+    //         boolean findNext = false;
+    //         // You matched the first move. Check the rest of them
+    //         while (played == patternPlayed && !findNext) {
+    //             historyPos++;
+    //             patternPos++;
+    //             played = this.playerHistory.get(historyPos);
+    //             patternPlayed = playerPattern.get(patternPos);
+    //             // You matched the whole string. Set winner to the thing that
+    //             // beats the next move played in the history
+    //             if (patternPos == length - 1) {
+    //                 Action nextMove = this.playerHistory.get(historyPos+1);
+    //                 switch (nextMove) {
+    //                     case ROCK:
+    //                         rCount++;
+    //                         foundPattern = true;
+    //                         findNext = true;
+    //                         break;
+    //                     case PAPER:
+    //                         pCount++;
+    //                         foundPattern = true;
+    //                         findNext = true;
+    //                         break;
+    //                     case SCISSORS:
+    //                         sCount++;
+    //                         foundPattern = true;
+    //                         findNext = true;
+    //                         break;
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     if (foundPattern) {
+    //         if (rCount > pCount && rCount > sCount) {
+    //             this.historyPredicted = Action.ROCK;
+    //             // System.out.println("predicting rock");
+    //             return true;
+    //         }
+    //         else if (pCount > rCount && pCount > sCount) {
+    //             this.historyPredicted = Action.PAPER;
+    //             // System.out.println("predicting paper");
+    //             return true;
+    //         }
+    //         else {
+    //             this.historyPredicted = Action.SCISSORS;
+    //             // System.out.println("predicting scissors");
+    //             return true;
+    //         }
+    //     }
+    //     // You looked through the whole string and didn't find that pattern
+    //     return false;
+    // }
 
     /* Helper method to determine the outcome when two players play a move.
         If playerMove beats opponentMove, returns 1. If they tie, returns
